@@ -1,5 +1,5 @@
 {
-  "name": "package.json",
+  "name": "job-manager",
   "version": "0.0.1",
   "description": "Manage your changing queues and due dates with ease",
   "productName": "Job Manager",
