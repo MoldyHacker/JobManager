@@ -1,32 +1,90 @@
 <template>
+  <div class="">
+    <q-btn label="Reset Filters" />
+    <!-- sort by due date or job number -->
+    <q-select v-model="sortBy" :options="sortOptions" label="Sort by" @input="sortOrders" />
+    <!-- filter by status -->
+    <q-select
+      v-model="selectedStatus"
+      :options="statusOptions"
+      label="Filter by Production Status"
+      multiple
+      use-chips
+      @input="filterOrders"
+    />
+    <!-- filter by department -->
+    <q-select
+      v-model="selectedDepartment"
+      :options="departmentOptions"
+      label="Filter by Department"
+      @input="filterOrders"
+    />
+    <!-- filter by customer -->
+    <q-select
+      v-model="selectedCustomer"
+      :options="customerOptions"
+      label="Filter by Customer"
+      @input="filterOrders"
+    />
+  </div>
   <q-page class="flex flex-center">
     <q-list bordered separator class="rounded-borders">
-      <!-- <q-item-label header>Google Inbox style</q-item-label> -->
-
-      <q-item
-        v-for="order in orders"
-        :key="order.orderId"
-        class="items-center"
-        :disable="order.status !== 'Pending Processing' && order.status !== 'In Progress'"
-      >
-        <!-- <q-item-section avatar top>
-          <q-icon name="account_tree" color="black" size="34px" />
-        </q-item-section> -->
-
+      <q-item class="items-center">
         <q-item-section top class="col-1">
-          <q-item-label class="">{{ order.jobNumber }}</q-item-label>
+          <q-item-label class="text-weight-medium">Job #</q-item-label>
         </q-item-section>
 
         <q-item-section top class="col-1 gt-sm">
-          <q-item-label class="" lines="2">{{ order.customer }}</q-item-label>
+          <q-item-label class="text-weight-medium" lines="2">Customer</q-item-label>
         </q-item-section>
         <q-item-section top class="col gt-sm">
-          <q-item-label class="">{{ order.customerPO }}</q-item-label>
+          <q-item-label class="text-grey-8">PO #</q-item-label>
         </q-item-section>
 
         <q-item-section top class="col lt-md">
-          <q-item-label class="ellipsis">{{ order.customer }}</q-item-label>
-          <q-item-label class="ellipsis">{{ order.customerPO }}</q-item-label>
+          <q-item-label class="text-weight-medium">Customer</q-item-label>
+          <q-item-label class="text-grey-8">PO #</q-item-label>
+        </q-item-section>
+
+        <q-item-section top class="col-3">
+          <q-item-label class="text-weight-medium">Part Number</q-item-label>
+          <q-item-label class="text-grey-8">Qty</q-item-label>
+        </q-item-section>
+
+        <q-item-section top class="col-auto" no-wrap>
+          <q-item-label class="text-weight-medium">Due Date</q-item-label>
+        </q-item-section>
+        <!-- <q-space /> -->
+
+        <q-item-section top class="col text-right gt-xs">
+          <q-item-label class="text-weight-medium">Status</q-item-label>
+          <q-item-label class="text-grey-8">Department</q-item-label>
+        </q-item-section>
+
+        <q-item-section top side class="col">
+          <div class="text-grey-8 q-gutter-xs">Actions</div>
+        </q-item-section>
+      </q-item>
+      <q-item
+        v-for="order in filteredOrders"
+        :key="order.orderId"
+        class="items-center"
+        :disable="order.status !== 'Pending Production' && order.status !== 'In Progress'"
+      >
+        <q-item-section top class="col-1">
+          <q-item-label class="text-weight-medium">{{ order.jobNumber }}</q-item-label>
+        </q-item-section>
+
+        <q-item-section top class="col-1 gt-sm">
+          <q-item-label class="text-weight-medium" lines="2">{{ order.customer }}</q-item-label>
+        </q-item-section>
+        <q-item-section top class="col gt-sm">
+          <q-item-label class="text-grey-8">{{ order.customerPO }}</q-item-label>
+        </q-item-section>
+
+        <q-item-section top class="col lt-md">
+          <q-item-label class="text-weight-medium ellipsis">{{ order.customer }}</q-item-label>
+          <q-item-label class="text-grey-8 ellipsis">{{ order.customerPO }}</q-item-label>
         </q-item-section>
 
         <q-item-section top class="col-3">
@@ -45,7 +103,8 @@
         <!-- <q-space /> -->
 
         <q-item-section top class="col text-right gt-xs">
-          <q-item-label class="">{{ order.department }}</q-item-label>
+          <q-item-label class="text-weight-medium ellipsis">{{ order.status }}</q-item-label>
+          <q-item-label class="text-grey-8">{{ order.department }}</q-item-label>
         </q-item-section>
 
         <q-item-section top side class="col">
@@ -61,7 +120,55 @@
 </template>
 
 <script setup>
-const orders = [
+import { ref, computed } from 'vue'
+
+const sortBy = ref('Due Date') // dueDate or jobNumber
+const sortOptions = ref(['Due Date', 'Job Number'])
+const selectedStatus = ref(['In Progress', 'Pending Production'])
+const statusOptions = ref([
+  'In Progress',
+  'Pending Production',
+  'Production Complete',
+  'Shipped',
+  'Completed',
+])
+const selectedDepartment = ref('All')
+const departmentOptions = ref(['All', 'Surface Grinding', 'CNC Milling', 'CNC Turning'])
+const selectedCustomer = ref('All')
+const customerOptions = ref(['All', 'SonoSite', 'GE Medical Systems China', 'Materion'])
+const filterStatus = ref(['In Progress', 'Pending Production'])
+
+const filteredOrders = computed(() => {
+  return orders.value.filter((order) => filterStatus.value.includes(order.status))
+})
+
+const filterOrders = () => {
+  filterStatus.value = selectedStatus.value
+  if (selectedDepartment.value !== 'All') {
+    filterStatus.value = filterStatus.value.filter(
+      (status) => status.department === selectedDepartment.value,
+    )
+  }
+  if (selectedCustomer.value !== 'All') {
+    filterStatus.value = filterStatus.value.filter(
+      (status) => status.customer === selectedCustomer.value,
+    )
+  }
+}
+
+const sortOrders = () => {
+  orders.value.sort((a, b) => {
+    const [monthA, dayA, yearA] = a.dueDate.split('-')
+    const dateA = new Date(yearA, monthA - 1, dayA)
+
+    const [monthB, dayB, yearB] = b.dueDate.split('-')
+    const dateB = new Date(yearB, monthB - 1, dayB)
+
+    return dateA - dateB
+  })
+}
+
+const orders = ref([
   {
     orderId: 1,
     customer: 'SonoSite Fujifilm',
@@ -90,7 +197,7 @@ const orders = [
     partDescription: 'Matching Layer Plate. Rexolite RC350',
     partNumber: 'P21018-01 Rev A',
     quantity: 95,
-    status: 'Pending Processing',
+    status: 'Pending Production',
   },
   {
     orderId: 3,
@@ -105,7 +212,7 @@ const orders = [
     partDescription: 'Matching Layer Plate. Rexolite RC350',
     partNumber: 'P21018-01 Rev A',
     quantity: 105,
-    status: 'Turned In',
+    status: 'Production Complete',
   },
   {
     orderId: 4,
@@ -153,7 +260,10 @@ const orders = [
     quantity: 20,
     status: 'Completed',
   },
-]
+])
+
+sortOrders()
+filterOrders()
 </script>
 
 <style lang="scss">
