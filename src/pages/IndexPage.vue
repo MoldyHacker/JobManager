@@ -86,7 +86,10 @@
         </q-item-section>
 
         <q-item-section top class="col-3">
-          <q-item-label class="text-weight-medium ellipsis">{{ order.partNumber }}</q-item-label>
+          <q-item-label class="text-weight-medium ellipsis"
+            ><q-tooltip>{{ order.partDescription }}</q-tooltip
+            >{{ order.partNumber }}</q-item-label
+          >
           <q-item-label class="text-grey-8">{{ order.quantity }}pcs</q-item-label>
         </q-item-section>
 
@@ -160,10 +163,10 @@ const sortOrders = () => {
     orders.value.sort((a, b) => a.jobNumber - b.jobNumber)
   } else if (sortBy.value === 'Due Date') {
     orders.value.sort((a, b) => {
-      const [monthA, dayA, yearA] = a.dueDate.split('-')
+      const [monthA, dayA, yearA] = a.newDueDate ? a.newDueDate.split('-') : a.dueDate.split('-')
       const dateA = new Date(yearA, monthA - 1, dayA)
 
-      const [monthB, dayB, yearB] = b.dueDate.split('-')
+      const [monthB, dayB, yearB] = b.newDueDate ? b.newDueDate.split('-') : b.dueDate.split('-')
       const dateB = new Date(yearB, monthB - 1, dayB)
 
       return dateA - dateB
