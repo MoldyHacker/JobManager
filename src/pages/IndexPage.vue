@@ -2,7 +2,12 @@
   <div class="">
     <q-btn label="Reset Filters" />
     <!-- sort by due date or job number -->
-    <q-select v-model="sortBy" :options="sortOptions" label="Sort by" @input="sortOrders" />
+    <q-select
+      v-model="sortBy"
+      :options="sortOptions"
+      label="Sort by"
+      @update:model-value="sortOrders"
+    />
     <!-- filter by status -->
     <q-select
       v-model="selectedStatus"
@@ -109,7 +114,7 @@
 
         <q-item-section top side class="col">
           <div class="text-grey-8 q-gutter-xs">
-            <q-btn class="gt-xs" size="12px" flat dense round icon="delete" />
+            <!-- <q-btn class="gt-xs" size="12px" flat dense round icon="delete" /> -->
             <q-btn class="gt-xs" size="12px" flat dense round icon="done" />
             <q-btn class="lt-sm" size="12px" flat dense round icon="more_vert" />
           </div>
@@ -122,8 +127,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 
-const sortBy = ref('Due Date') // dueDate or jobNumber
+const sortBy = ref('Due Date')
 const sortOptions = ref(['Due Date', 'Job Number'])
+
 const selectedStatus = ref(['In Progress', 'Pending Production'])
 const statusOptions = ref([
   'In Progress',
@@ -132,8 +138,10 @@ const statusOptions = ref([
   'Shipped',
   'Completed',
 ])
+
 const selectedDepartment = ref('All')
 const departmentOptions = ref(['All', 'Surface Grinding', 'CNC Milling', 'CNC Turning'])
+
 const selectedCustomer = ref('All')
 const customerOptions = ref(['All', 'SonoSite', 'GE Medical Systems China', 'Materion'])
 const filterStatus = ref(['In Progress', 'Pending Production'])
@@ -157,15 +165,19 @@ const filterOrders = () => {
 }
 
 const sortOrders = () => {
-  orders.value.sort((a, b) => {
-    const [monthA, dayA, yearA] = a.dueDate.split('-')
-    const dateA = new Date(yearA, monthA - 1, dayA)
+  if (sortBy.value === 'Job Number') {
+    orders.value.sort((a, b) => a.jobNumber - b.jobNumber)
+  } else if (sortBy.value === 'Due Date') {
+    orders.value.sort((a, b) => {
+      const [monthA, dayA, yearA] = a.dueDate.split('-')
+      const dateA = new Date(yearA, monthA - 1, dayA)
 
-    const [monthB, dayB, yearB] = b.dueDate.split('-')
-    const dateB = new Date(yearB, monthB - 1, dayB)
+      const [monthB, dayB, yearB] = b.dueDate.split('-')
+      const dateB = new Date(yearB, monthB - 1, dayB)
 
-    return dateA - dateB
-  })
+      return dateA - dateB
+    })
+  }
 }
 
 const orders = ref([
