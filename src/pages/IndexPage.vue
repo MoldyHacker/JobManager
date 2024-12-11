@@ -15,22 +15,15 @@
       label="Filter by Production Status"
       multiple
       use-chips
-      @input="filterOrders"
     />
     <!-- filter by department -->
     <q-select
       v-model="selectedDepartment"
       :options="departmentOptions"
       label="Filter by Department"
-      @input="filterOrders"
     />
     <!-- filter by customer -->
-    <q-select
-      v-model="selectedCustomer"
-      :options="customerOptions"
-      label="Filter by Customer"
-      @input="filterOrders"
-    />
+    <q-select v-model="selectedCustomer" :options="customerOptions" label="Filter by Customer" />
   </div>
   <q-page class="flex flex-center">
     <q-list bordered separator class="rounded-borders">
@@ -120,6 +113,11 @@
           </div>
         </q-item-section>
       </q-item>
+      <q-item v-if="filteredOrders.length === 0">
+        <q-item-section top class="items-center">
+          <q-item-label class="text-weight-medium">No Data...</q-item-label>
+        </q-item-section>
+      </q-item>
     </q-list>
   </q-page>
 </template>
@@ -144,25 +142,18 @@ const departmentOptions = ref(['All', 'Surface Grinding', 'CNC Milling', 'CNC Tu
 
 const selectedCustomer = ref('All')
 const customerOptions = ref(['All', 'SonoSite', 'GE Medical Systems China', 'Materion'])
-const filterStatus = ref(['In Progress', 'Pending Production'])
 
 const filteredOrders = computed(() => {
-  return orders.value.filter((order) => filterStatus.value.includes(order.status))
+  return orders.value.filter((order) => {
+    const statusMatch =
+      selectedStatus.value.length === 0 || selectedStatus.value.includes(order.status)
+    const departmentMatch =
+      selectedDepartment.value === 'All' || order.department === selectedDepartment.value
+    const customerMatch =
+      selectedCustomer.value === 'All' || order.customer === selectedCustomer.value
+    return statusMatch && departmentMatch && customerMatch
+  })
 })
-
-const filterOrders = () => {
-  filterStatus.value = selectedStatus.value
-  if (selectedDepartment.value !== 'All') {
-    filterStatus.value = filterStatus.value.filter(
-      (status) => status.department === selectedDepartment.value,
-    )
-  }
-  if (selectedCustomer.value !== 'All') {
-    filterStatus.value = filterStatus.value.filter(
-      (status) => status.customer === selectedCustomer.value,
-    )
-  }
-}
 
 const sortOrders = () => {
   if (sortBy.value === 'Job Number') {
@@ -275,7 +266,6 @@ const orders = ref([
 ])
 
 sortOrders()
-filterOrders()
 </script>
 
 <style lang="scss">
